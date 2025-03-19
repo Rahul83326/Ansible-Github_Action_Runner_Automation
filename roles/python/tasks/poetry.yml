@@ -1,0 +1,22 @@
+- name: Download Poetry Installer
+  ansible.builtin.get_url:
+    url: "https://install.python-poetry.org"
+    dest: "/tmp/install-poetry.py"
+    mode: "0755"
+
+- name: Install Poetry Globally
+  ansible.builtin.command:
+    cmd: "python{{ PYTHON_VERSION }} /tmp/install-poetry.py --yes"
+  environment:
+    POETRY_HOME: "/usr/local"
+  args:
+    creates: "/usr/local/bin/poetry"
+
+- name: Check Poetry Version
+  ansible.builtin.command: "poetry --version"
+  register: poetry_version
+  changed_when: false
+
+- name: Show Poetry Version
+  ansible.builtin.debug:
+    msg: "Poetry version installed: {{ poetry_version.stdout }}"

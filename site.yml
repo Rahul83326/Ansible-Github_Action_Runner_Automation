@@ -1,0 +1,5 @@
+- name: Setup Ansible Action Runner on the EC2 Instance
+  hosts: action_runner_group
+  become: yes
+  roles:
+    - python
