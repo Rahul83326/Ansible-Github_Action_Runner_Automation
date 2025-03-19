@@ -33,7 +33,7 @@
 - name: Configure GitHub Actions runner
   become: no
   command: >
-    ./config.sh --url https://github.com/vgts/Ansible --token {{ GITHUB_ACTIONS_TOKEN }}
+    ./config.sh --url {{REPO_URL}} --token {{ GITHUB_ACTIONS_TOKEN }}
                 --name ansible_actions_runner
                 --unattended
                 --replace
