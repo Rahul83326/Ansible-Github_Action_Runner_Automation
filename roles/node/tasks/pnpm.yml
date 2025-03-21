@@ -1,0 +1,23 @@
+- name: Ensure required dependencies are installed
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+    update_cache: yes
+
+- name: Install pnpm globally using npm
+  shell: "npm install -g pnpm"
+  args:
+    executable: /bin/bash
+  register: pnpm_install
+  changed_when: "'pnpm' in pnpm_install.stdout"
+
+- name: Verify pnpm installation
+  shell: "pnpm --version"
+  register: pnpm_version
+  changed_when: false
+
+- name: Show installed pnpm version
+  debug:
+    msg: "pnpm version installed: {{ pnpm_version.stdout }}"

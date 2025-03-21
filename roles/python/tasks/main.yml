@@ -1,0 +1,39 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Add deadsnakes PPA (for newer Python versions)
+  ansible.builtin.apt_repository:
+    repo: ppa:deadsnakes/ppa
+    state: present
+
+- name: Update APT package cache again
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Python-{{ PYTHON_VERSION }}
+  ansible.builtin.apt:
+    name: "python{{ PYTHON_VERSION }}"
+    state: present
+
+- name: Verify Python installation
+  ansible.builtin.command: "python{{ PYTHON_VERSION }} --version"
+  register: python_version
+  changed_when: false
+
+- name: Debug installed Python version
+  ansible.builtin.debug:
+    msg: "{{ python_version.stdout }}"
+
+- name: Install Python-{{ PYTHON_VERSION }} VENV
+  ansible.builtin.apt:
+    name: "python{{ PYTHON_VERSION }}-venv"
+    state: present
+  
+- name: Include Poetry installation
+  ansible.builtin.include_tasks: roles/python/tasks/poetry.yml
+  when: DEPENDENCY_MANAGEMENT_TOOL == "poetry"
+
+- name: Include UV installation
+  ansible.builtin.include_tasks: roles/python/tasks/uv.yml
+  when: DEPENDENCY_MANAGEMENT_TOOL == "UV"

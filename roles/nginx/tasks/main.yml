@@ -1,0 +1,36 @@
+- name: Install NGINX
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Ensure NGINX service is running
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Create NGINX site configuration
+  template:
+    src: roles/nginx/files/nginx_site.conf.j2
+    dest: /etc/nginx/sites-available/{{ NGINX_SITE_NAME }}
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable site by creating symlink in sites-enabled
+  file:
+    src: /etc/nginx/sites-available/{{ NGINX_SITE_NAME }}
+    dest: /etc/nginx/sites-enabled/{{ NGINX_SITE_NAME }}
+    state: link
+
+- name: Test NGINX configuration
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+
+- name: Restart NGINX if configuration is valid
+  service:
+    name: nginx
+    state: restarted
+  when: nginx_test.rc == 0

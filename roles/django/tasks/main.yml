@@ -1,0 +1,44 @@
+- name: Set project path variable (could be dynamically set, for example)
+  set_fact:
+    project_path: "{{ ACTION_RUNNER_PATH }}/{{ GITHUB_REPOSITORY_BACKEND }}/{{ GITHUB_REPOSITORY_BACKEND }}"
+
+- name: Include psycopg2 installation setup
+  ansible.builtin.include_tasks: roles/django/tasks/psycopg2.yml
+
+- name: Setup Directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0755'
+  loop:
+    - "{{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
+    - "{{ LOGS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
+    - "{{ PIDS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
+    - "/home/ubuntu/{{ DJANGO_PROJECT_NAME }}"
+
+- name: Set uWSGI configuration
+  template:
+    src: roles/django/files/uwsgi.ini.j2
+    dest: "/home/ubuntu/{{ DJANGO_PROJECT_NAME }}/uwsgi.ini"
+    owner: "{{ SYSTEM_USER }}"
+    group: "{{ SYSTEM_GROUP }}"
+    mode: '0644'
+
+- name: Set Systemd Service
+  become: true
+  template:
+    src: roles/django/files/uwsgi.service.j2
+    dest: "/etc/systemd/system/{{ DJANGO_PROJECT_NAME }}.service"
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Systemd service
+  become: true
+  systemd:
+    name: "{{ DJANGO_PROJECT_NAME }}"
+    enabled: yes
+    daemon_reload: yes
+    state: restarted
