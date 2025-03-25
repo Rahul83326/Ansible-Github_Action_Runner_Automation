@@ -1,0 +1,39 @@
+[uwsgi]
+uid = {{ SYSTEM_USER }}
+gid = {{ SYSTEM_GROUP }}
+
+strict = true
+master = true
+enable-threads = true
+vacuum = true
+single-interpreter = true
+die-on-term = true
+need-app = true
+
+harakiri = 6000
+
+lazy-apps = true
+
+max-requests = 1000
+max-worker-lifetime = 3600
+reload-on-rss = 6072
+worker-reload-mercy = 600
+
+processes = {{ ansible_processor_cores }}
+
+chdir = /home/ubuntu/actions-runner/_work/{{ GITHUB_REPOSITORY }}/{{ GITHUB_REPOSITORY }}
+wsgi-file = {{ DJANGO_PROJECT_NAME }}/wsgi.py
+uwsgi-socket = {{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}.sock
+chmod-socket = 666
+
+log-4xx = true
+log-5xx = true
+log-date = true
+logto = {{ LOGS_PATH }}/{{ DJANGO_PROJECT_NAME }}/uwsgi.log
+
+env = DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }}
+pidfile2 = {{ PIDS_PATH }}/{{ DJANGO_PROJECT_NAME }}/uwsgi.pid
+
+ignore-sigpipe = true
+ignore-write-errors = true
+disable-write-exception = true

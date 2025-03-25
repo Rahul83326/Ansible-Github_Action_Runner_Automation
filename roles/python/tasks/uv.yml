@@ -1,0 +1,32 @@
+- name: Download UV installer script
+  ansible.builtin.get_url:
+    url: "https://get.uv.rs"
+    dest: "/tmp/install-uv.sh"
+    mode: "0755"
+
+- name: Run UV installer
+  ansible.builtin.shell:
+    cmd: "/bin/sh /tmp/install-uv.sh --yes"
+  args:
+    creates: "/usr/local/bin/uv"
+
+- name: Ensure UV is available for all users
+  ansible.builtin.lineinfile:
+    path: /etc/profile.d/uv.sh
+    line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+    create: true
+    mode: "0644"
+
+- name: Check UV Version
+  ansible.builtin.command: "uv --version"
+  register: uv_version
+  changed_when: false
+
+- name: Show UV Version
+  ansible.builtin.debug:
+    msg: "UV version installed: {{ uv_version.stdout }}"
+
+
+
+
+#UV installer

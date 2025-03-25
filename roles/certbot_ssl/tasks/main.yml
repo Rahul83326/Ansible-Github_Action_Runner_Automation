@@ -1,0 +1,10 @@
+- name: Configure Nginx SSL server block
+  blockinfile:
+    path: /etc/nginx/sites-available/{{ NGINX_SITE_NAME }}-ssl
+    block: |
+      ssl_certificate /etc/letsencrypt/live/{{ DOMAIN_NAME }}/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/{{ DOMAIN_NAME }}/privkey.pem;
+    insertafter: "{{ DOMAIN_NAME }}-ssl"
+    backup: yes
+  notify:
+    - restart nginx

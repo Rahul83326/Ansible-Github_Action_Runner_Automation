@@ -1,0 +1,10 @@
+- name: Configure Nginx SSL server block
+    template:
+    src: templates/nginx-ssl-server.conf.j2
+    dest: /etc/nginx/sites-available/{{ DOMAIN_NAME }}-ssl
+    owner: root
+    group: root
+    mode: 0644
+    notify:
+    - restart nginx
+    with_items: "{{ nginx_sites }}"

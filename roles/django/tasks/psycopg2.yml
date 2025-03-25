@@ -1,0 +1,27 @@
+- name: Check if requirements.txt exists
+  stat:
+    path: "{{ project_path }}/requirements.txt"
+  register: requirements_stat
+
+- name: Check if pyproject.toml exists
+  stat:
+    path: "{{ project_path }}/pyproject.toml"
+  register: pyproject_stat
+
+- name: Install python{{PYTHON_VERSION}}-dev if psycopg2 is in requirements.txt
+  apt:
+    name:
+      - python{{PYTHON_VERSION}}-dev
+      - libpq-dev
+    state: present
+  when: 
+    - requirements_stat.stat.exists and "'psycopg2' in lookup('file', project_path + '/requirements.txt')"
+
+- name: Install python{{PYTHON_VERSION}}-dev if psycopg2 is in pyproject.toml
+  apt:
+    name:
+      - python{{PYTHON_VERSION}}-dev
+      - libpq-dev
+    state: present
+  when: 
+    - pyproject_stat.stat.exists and "'psycopg2' in lookup('file', project_path + '/pyproject.toml')"

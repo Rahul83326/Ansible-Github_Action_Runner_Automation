@@ -1,0 +1,36 @@
+- name: Install prerequisites
+  apt:
+    name:
+      - curl
+      - software-properties-common
+    state: present
+    update_cache: yes
+
+- name: Remove old Node.js versions (if any)
+  apt:
+    name: nodejs
+    state: absent
+
+- name: Fetch latest Node.js setup script
+  shell: "curl -fsSL https://deb.nodesource.com/setup_{{ NODE_VERSION }}.x | bash -"
+  args:
+    executable: /bin/bash
+
+- name: Install latest Node.js
+  apt:
+    name: nodejs
+    state: present
+    update_cache: yes
+
+- name: Verify Node.js installation
+  shell: "node -v"
+  register: node_version
+  changed_when: false
+
+- name: Show installed Node.js version
+  debug:
+    msg: "Installed Node.js version: {{ node_version.stdout }}"
+
+- name: Include PNPM installation
+  ansible.builtin.include_tasks: /Users/vgts/Ansible-Python/roles/node/tasks/pnpm.yml
+  when: DEPENDENCY_MANAGEMENT_TOOL_TYPE == "pnpm"
