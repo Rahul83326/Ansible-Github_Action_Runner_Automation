@@ -4,54 +4,74 @@
     state: directory
     owner: ubuntu
     group: ubuntu
-    mode: '0755'
+    mode: '0775'
+    recurse: yes
 
 - name: Detect system architecture
   set_fact:
     runner_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'x64' }}"
+
+- name: Check if GitHub Actions runner is already installed
+  stat:
+    path: "{{ RUNNER_DIR }}/run.sh"
+  register: runner_installed
 
 - name: Download GitHub Actions runner (x86_64)
   get_url:
     url: "https://github.com/actions/runner/releases/download/v{{ RUNNER_VERSION }}/actions-runner-linux-x64-{{ RUNNER_VERSION }}.tar.gz"
     dest: "{{ RUNNER_DIR }}/actions-runner.tar.gz"
     mode: '0755'
-  when: ansible_architecture == "x86_64"
+  when: ansible_architecture == "x86_64" and not runner_installed.stat.exists
 
 - name: Download GitHub Actions runner (ARM64)
   get_url:
     url: "https://github.com/actions/runner/releases/download/v{{ RUNNER_VERSION }}/actions-runner-linux-arm64-{{ RUNNER_VERSION }}.tar.gz"
     dest: "{{ RUNNER_DIR }}/actions-runner.tar.gz"
     mode: '0755'
-  when: ansible_architecture == "aarch64"
+  when: ansible_architecture == "aarch64" and not runner_installed.stat.exists
 
 - name: Extract GitHub Actions runner
   unarchive:
     src: "{{ RUNNER_DIR }}/actions-runner.tar.gz"
     dest: "{{ RUNNER_DIR }}"
     remote_src: yes
+  when: not runner_installed.stat.exists
+
+- name: Ensure correct permissions for runner directory
+  become: true
+  file:
+    path: "{{ RUNNER_DIR }}"
+    owner: ubuntu
+    group: ubuntu
+    mode: '0775'
+    recurse: yes
 
 - name: Configure GitHub Actions runner
-  become: no
-  command: >
-    ./config.sh --url {{REPO_URL}} --token {{ GITHUB_ACTIONS_TOKEN }}
+  become: true
+  ansible.builtin.command: >
+    sudo -u ubuntu ./config.sh --url https://github.com/{{ GITHUB_ORGANIZATION }}/{{ GITHUB_REPOSITORY_FRONTEND }} --token {{ GITHUB_ACTIONS_TOKEN }}
                 --name ansible_actions_runner
                 --unattended
                 --replace
                 --tag ansible_actions_runner
   args:
     chdir: "{{ RUNNER_DIR }}"
+  when: not runner_installed.stat.exists
 
 - name: Install runner as systemd service
-  command: ./svc.sh install
+  become: true
+  ansible.builtin.command: ./svc.sh install
   args:
     chdir: "{{ RUNNER_DIR }}"
+  when: not runner_installed.stat.exists
 
 - name: Start runner as systemd service
-  command: ./svc.sh start
+  ansible.builtin.command: ./svc.sh start
   args:
     chdir: "{{ RUNNER_DIR }}"
+  when: not runner_installed.stat.exists
 
 - name: Check runner service status
-  command: ./svc.sh status
+  ansible.builtin.command: ./svc.sh status
   args:
     chdir: "{{ RUNNER_DIR }}"
