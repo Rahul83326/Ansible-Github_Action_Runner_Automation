@@ -1,0 +1,32 @@
+- name: Install Certbot and NGINX plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+  when: ssl_cert.stat.exists == false
+
+- name: Obtain SSL certificates for the domain using Certbot
+  command: certbot --nginx -d "{{ FRONTEND_DOMAIN_NAME }}" --non-interactive --agree-tos -m "{{ EMAIL }}"
+  when: ssl_cert.stat.exists == false
+  
+- name: Create NGINX SSL site configuration
+  template:
+    src: roles/nginx/files/nginx_site.conf.ssl.j2
+    dest: /etc/nginx/sites-enabled/{{ NGINX_SITE_NAME }}
+    owner: root
+    group: root
+    mode: '0644'
+  when: ssl_cert.stat.exists == true
+
+- name: Ensure NGINX is running
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: Reload NGINX
+  service:
+    name: nginx
+    state: reloaded

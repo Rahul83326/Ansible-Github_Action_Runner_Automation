@@ -5,6 +5,9 @@
 - name: Include psycopg2 installation setup
   ansible.builtin.include_tasks: roles/django/tasks/psycopg2.yml
 
+- name: Include hiredis installation setup
+  ansible.builtin.include_tasks: roles/django/tasks/hiredis.yml
+
 - name: Setup Directories
   file:
     path: "{{ item }}"
@@ -15,7 +18,7 @@
   loop:
     - "{{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
     - "{{ LOGS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
-    - "{{ PIDS_PATH }}/{{ DJANGO_PROJECT_NAME }}"
+    - "{{ PIDS_PATH }}/{{ DJANGO_PROJECT_PIDS }}"
     - "/home/ubuntu/{{ DJANGO_PROJECT_NAME }}"
 
 - name: Set uWSGI configuration
@@ -35,10 +38,44 @@
     group: root
     mode: '0644'
 
-- name: Restart Systemd service
-  become: true
-  systemd:
-    name: "{{ DJANGO_PROJECT_NAME }}"
-    enabled: yes
-    daemon_reload: yes
+# - name: Restart Systemd service
+#   become: true
+#   systemd:
+#     name: "{{ DJANGO_PROJECT_NAME }}"
+#     enabled: yes
+#     daemon_reload: yes
+#     state: restarted
+
+- name: Create NGINX site configuration
+  template:
+    src: roles/django/files/nginx.conf.j2
+    dest: /etc/nginx/sites-available/{{ NGINX_SITE_BACKEND }}
+    owner: root
+    group: root
+    mode: '0644'
+
+# - name: Enable site by creating symlink in sites-enabled
+#   file:
+#     src: /etc/nginx/sites-available/{{ NGINX_SITE_BACKEND }}
+#     dest: /etc/nginx/sites-enabled/{{ NGINX_SITE_BACKEND }}
+#     state: link
+  
+- name: Test NGINX configuration
+  command: nginx -t
+  register: nginx_test
+  changed_when: false
+
+- name: Restart NGINX if configuration is valid
+  service:
+    name: nginx
     state: restarted
+  when: nginx_test.rc == 0
+
+- name: Check if SSL certificates exist
+  stat:
+    path: "/etc/letsencrypt/live/{{ BACKEND_DOMAIN_NAME }}/fullchain.pem"
+  register: ssl_cert
+
+- name: Include Certbot installation and SSL configuration if necessary
+  ansible.builtin.include_tasks: roles/django/tasks/certbot-backend.yml
+  when: ssl_cert.stat.exists == false

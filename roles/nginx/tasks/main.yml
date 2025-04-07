@@ -10,11 +10,11 @@
     state: started
     enabled: yes
 
-# - name: Remove default Nginx site configuration
-#   file:
-#     path: /etc/nginx/sites-enabled/default
-#     state: absent
-#   become: yes
+- name: Remove default Nginx site configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: yes
 
 - name: Create NGINX site configuration
   template:
@@ -40,3 +40,12 @@
     name: nginx
     state: restarted
   when: nginx_test.rc == 0
+
+- name: Check if SSL certificates exist
+  stat:
+    path: "/etc/letsencrypt/live/{{ FRONTEND_DOMAIN_NAME }}/fullchain.pem"
+  register: ssl_cert
+
+- name: Include Certbot installation and SSL configuration if necessary
+  ansible.builtin.include_tasks: roles/nginx/tasks/certbot.yml
+  when: ssl_cert.stat.exists == false

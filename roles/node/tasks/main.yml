@@ -34,3 +34,4 @@
 - name: Include PNPM installation
   ansible.builtin.include_tasks: /Users/vgts/Ansible-Python/roles/node/tasks/pnpm.yml
   when: DEPENDENCY_MANAGEMENT_TOOL_TYPE == "pnpm"
+

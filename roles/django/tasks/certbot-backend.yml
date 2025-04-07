@@ -1,0 +1,31 @@
+- name: Install Certbot and NGINX plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+
+- name: Obtain SSL certificates for the domain using Certbot
+  command: certbot --nginx -d "{{ BACKEND_DOMAIN_NAME }}" --non-interactive --agree-tos -m "{{ EMAIL }}"
+  register: certbot_output
+  ignore_errors: yes
+
+- name: Debug Certbot Output
+  debug:
+    var: certbot_output
+
+- name: Create Nginx SSL site configuration
+  template:
+    src: roles/django/files/nginx.conf.ssl.j2
+    dest: /etc/nginx/sites-enabled/{{ NGINX_SITE_BACKEND }}
+    owner: root
+    group: root
+    mode: '0644'
+  when: certbot_output.rc == 0
+
+- name: Reload Nginx to apply SSL config
+  service:
+    name: nginx
+    state: reloaded
+  when: certbot_output.rc == 0

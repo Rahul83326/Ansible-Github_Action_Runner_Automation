@@ -1,0 +1,31 @@
+server {
+    listen 80;
+    server_name {{ FRONTEND_DOMAIN_NAME }};
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name {{ FRONTEND_DOMAIN_NAME }} www.{{ FRONTEND_DOMAIN_NAME }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ FRONTEND_DOMAIN_NAME }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ FRONTEND_DOMAIN_NAME }}/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/{{ FRONTEND_DOMAIN_NAME }}/chain.pem;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    root {{ STATIC_SITE_PATH }}/{{ BUILD_PATH }};
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    error_log /var/log/nginx/{{ SITE_NAME }}_error.log;
+    access_log /var/log/nginx/{{ SITE_NAME }}_access.log;
+}

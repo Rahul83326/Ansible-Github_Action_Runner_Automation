@@ -1,6 +1,6 @@
 [uwsgi]
-uid = {{ SYSTEM_USER }}
-gid = {{ SYSTEM_GROUP }}
+uid = root
+gid = root
 
 strict = true
 master = true
@@ -19,9 +19,9 @@ max-worker-lifetime = 3600
 reload-on-rss = 6072
 worker-reload-mercy = 600
 
-processes = {{ ansible_processor_cores }}
+processes = 2
 
-chdir = /home/ubuntu/actions-runner/_work/{{ GITHUB_REPOSITORY }}/{{ GITHUB_REPOSITORY }}
+chdir = /home/ubuntu/actions-runner/_work/{{ GITHUB_REPOSITORY_BACKEND }}/{{ GITHUB_REPOSITORY_BACKEND }}
 wsgi-file = {{ DJANGO_PROJECT_NAME }}/wsgi.py
 uwsgi-socket = {{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}.sock
 chmod-socket = 666
@@ -32,7 +32,7 @@ log-date = true
 logto = {{ LOGS_PATH }}/{{ DJANGO_PROJECT_NAME }}/uwsgi.log
 
 env = DJANGO_SETTINGS_MODULE={{ DJANGO_SETTINGS_MODULE }}
-pidfile2 = {{ PIDS_PATH }}/{{ DJANGO_PROJECT_NAME }}/uwsgi.pid
+pidfile2 = {{ PIDS_PATH }}/{{ DJANGO_PROJECT_PIDS }}/uwsgi.pid
 
 ignore-sigpipe = true
 ignore-write-errors = true

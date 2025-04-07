@@ -1,0 +1,22 @@
+server {
+    listen 80;
+    server_name {{ BACKEND_DOMAIN_NAME }};
+
+    client_max_body_size 600M;
+    client_body_timeout 6000s;
+    proxy_max_temp_file_size 1024m;
+
+    error_log /var/log/{{ DJANGO_PROJECT_NAME }}_error.log;
+    access_log /var/log/{{ DJANGO_PROJECT_NAME }}_access.log;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+        allow all;
+    }
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:{{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}.sock;
+        uwsgi_read_timeout 6000s;
+    }
+}

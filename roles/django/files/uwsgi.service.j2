@@ -6,7 +6,7 @@ After=syslog.target
 User={{ SYSTEM_USER }}
 Group={{ SYSTEM_GROUP }}
 
-WorkingDirectory=/home/ubuntu/actions-runner/_work/{{ GITHUB_REPOSITORY }}/{{ GITHUB_REPOSITORY }}
+WorkingDirectory=/home/ubuntu/actions-runner/_work/{{ GITHUB_REPOSITORY_BACKEND }}/{{ GITHUB_REPOSITORY_BACKEND }}
 
 ExecStart=poetry run uwsgi --emperor /home/ubuntu/{{ DJANGO_PROJECT_NAME }}/uwsgi.ini
 

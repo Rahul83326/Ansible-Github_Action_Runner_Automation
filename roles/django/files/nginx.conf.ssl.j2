@@ -1,0 +1,26 @@
+server {
+    listen 80;
+    server_name api.ansible.vgts.tech;
+
+    proxy_ssl_server_name on;
+
+    client_max_body_size 600M;
+    client_body_timeout 6000s;
+
+    proxy_max_temp_file_size 1024m;
+
+    error_log /var/log/{{ DJANGO_PROJECT_NAME }}_error.log;
+    access_log /var/log/{{ DJANGO_PROJECT_NAME }}_access.log;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:{{ UNIX_SOCKETS_PATH }}/{{ DJANGO_PROJECT_NAME }}.sock;
+        uwsgi_read_timeout 6000s;
+    }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/{{ BACKEND_DOMAIN_NAME }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ BACKEND_DOMAIN_NAME }}/privkey.pem;
+    ssl_trusted_certificate /etc/letsencrypt/live/{{ BACKEND_DOMAIN_NAME }}/chain.pem;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}

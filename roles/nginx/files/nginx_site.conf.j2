@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name {{ DOMAIN_NAME }};
+    server_name {{ FRONTEND_DOMAIN_NAME }};
     
     root {{STATIC_SITE_PATH}}/{{ BUILD_PATH }};
     index index.html index.html;
